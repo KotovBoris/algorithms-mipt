@@ -5,28 +5,28 @@
 #include <iostream>
 #include <vector>
 
-int GetByte(unsigned long long number, int bit_num) {
-  const int kBitsNumInByte = 8;
-  const int kMaxByte = 8;
+size_t GetByte(size_t number, size_t bit_num) {
+  const size_t kBitsNumInByte = 8;
+  const size_t kMaxByte = 8;
   number <<= kBitsNumInByte * (kMaxByte - bit_num);
   number >>= kMaxByte * kBitsNumInByte - kBitsNumInByte;
   return number;
 }
 
-void RadixLSDSort(std::vector<unsigned long long>& array) {
-  const int kBitsNumInByte = 8;
-  size_t len = array.size();
-  for (int bit_num = 1; bit_num <= kBitsNumInByte; ++bit_num) {
-    std::vector<int> count(pow(2, kBitsNumInByte));
-    for (size_t i = 0; i < len; ++i) {
+void RadixSort(std::vector<size_t>& array) {
+  const size_t kBitsNumInByte = 8;
+  size_t lenght = array.size();
+  for (size_t bit_num = 1; bit_num <= kBitsNumInByte; ++bit_num) {
+    std::vector<size_t> count(pow(2, kBitsNumInByte));
+    for (size_t i = 0; i < lenght; ++i) {
       ++count[GetByte(array[i], bit_num)];
     }
-    for (int i = 1; i < pow(2, kBitsNumInByte); ++i) {
+    for (size_t i = 1; i < pow(2, kBitsNumInByte); ++i) {
       count[i] += count[i - 1];
     }
-    std::vector<unsigned long long> sorted_array(len);
-    for (int i = len - 1; i >= 0; --i) {
-      sorted_array[--count[GetByte(array[i], bit_num)]] = array[i];
+    std::vector<size_t> sorted_array(lenght);
+    for (size_t i = lenght; i > 0; --i) {
+      sorted_array[--count[GetByte(array[i - 1], bit_num)]] = array[i - 1];
     }
 
     array = sorted_array;
@@ -34,16 +34,16 @@ void RadixLSDSort(std::vector<unsigned long long>& array) {
 }
 
 int main() {
-  int len;
-  std::cin >> len;
-  std::vector<unsigned long long> array(len);
-  for (int i = 0; i < len; ++i) {
+  size_t lenght;
+  std::cin >> lenght;
+  std::vector<size_t> array(lenght);
+  for (size_t i = 0; i < lenght; ++i) {
     std::cin >> array[i];
   }
 
-  RadixLSDSort(array);
+  RadixSort(array);
 
-  for (unsigned long long elem : array) {
-    std::cout << elem << '\n';
+  for (size_t element : array) {
+    std::cout << element << '\n';
   }
 }
