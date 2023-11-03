@@ -1,14 +1,14 @@
-/*Вам даны sequence_len, order_statistic_num, sequence[0], sequence[1] 
+/*Вам даны sequence_len, order_statistic_num, sequence[0], sequence[1]
   (1 ≤ order_statistic_num ≤ sequence_len ≤ 10**7, 0 ≤ sequence[i] < 10**7 + 4321)
-  - количество чисел в числовой последовательности, номер искомой порядковой статистики и 
-  первые два числа числовой последовательности (остальная часть задается рекурсивно) 
+  - количество чисел в числовой последовательности, номер искомой порядковой статистики и
+  первые два числа числовой последовательности (остальная часть задается рекурсивно)
 
   Вывести искомую порядковую статистику*/
 
 #include <iostream>
 #include <vector>
 
-int MedianOf1234(std::vector<int>& array) {
+int MedianShortArray(std::vector<int>& array) {  // длина массива - от 1 до 4
   if (array.size() <= 2) {
     return array[0];
   }
@@ -43,74 +43,79 @@ int MedianOf5(std::vector<int>& slice) {
   return std::max(slice[2], slice[3]);
 }
 
-int Partition(std::vector<int>& array, int start, int end, int pivot) {
-  int index_for_less_than_pivot = start;
-  int index_for_more_than_pivot = end - 1;
-  while (index_for_less_than_pivot < end &&
-         array[index_for_less_than_pivot] < pivot) {
-    ++index_for_less_than_pivot;
-  }
-  while (index_for_more_than_pivot >= start &&
-         array[index_for_more_than_pivot] >= pivot) {
-    --index_for_more_than_pivot;
-  }
-  while (index_for_less_than_pivot < index_for_more_than_pivot) {
-    std::swap(array[index_for_less_than_pivot],
-              array[index_for_more_than_pivot]);
-    while (index_for_less_than_pivot < end &&
-           array[index_for_less_than_pivot] < pivot) {
-      ++index_for_less_than_pivot;
+size_t Partition(std::vector<int>& array, size_t start, size_t end, int pivot) {
+  size_t less_pivot = start;
+  size_t more_pivot = end - 1;
+  while (less_pivot < end && array[less_pivot] < pivot) {
+    if (less_pivot == 0) {
+      break;
     }
-    while (index_for_more_than_pivot >= start &&
-           array[index_for_more_than_pivot] >= pivot) {
-      --index_for_more_than_pivot;
+    ++less_pivot;
+  }
+  while (more_pivot >= start && array[more_pivot] >= pivot) {
+    if (more_pivot == 0) {
+      break;
+    }
+    --more_pivot;
+  }
+  while (less_pivot < more_pivot) {
+    std::swap(array[less_pivot], array[more_pivot]);
+    while (less_pivot < end && array[less_pivot] < pivot) {
+      ++less_pivot;
+    }
+    while (more_pivot >= start && array[more_pivot] >= pivot) {
+      if (more_pivot == 0) {
+        break;
+      }
+      --more_pivot;
     }
   }
-  return index_for_more_than_pivot + 1 - start;
+  return more_pivot + 1 - start;
 }
 
-int QuickSelect(std::vector<int>& array, int start, int end,
-                int order_statistic_num, std::vector<int>& slice) {
-  int len = end - start;
-  if (len == 1) {
+int QuickSelect(std::vector<int>& array, size_t start, size_t end,
+                size_t order_statistic_num, std::vector<int>& slice) {
+  size_t lenght = end - start;
+  if (lenght == 1) {
     return array[start];
   }
 
-  const int kSliceLen = 5;
-  int medians_len = len / kSliceLen;
-  int last_slice_len = len % kSliceLen;
-  if (last_slice_len != 0) {
-    ++medians_len;
+  const size_t kSliceLenght = 5;
+  size_t medians_lenght = lenght / kSliceLenght;
+  size_t last_slice_lenght = lenght % kSliceLenght;
+  if (last_slice_lenght != 0) {
+    ++medians_lenght;
   }
-  std::vector<int> medians(medians_len);
-  for (int i = 0; i < len / kSliceLen; ++i) {
-    for (int j = 0; j < kSliceLen; ++j) {
-      slice[j] = array[start + i * kSliceLen + j];
+  std::vector<int> medians(medians_lenght);
+  for (size_t i = 0; i < lenght / kSliceLenght; ++i) {
+    for (size_t j = 0; j < kSliceLenght; ++j) {
+      slice[j] = array[start + i * kSliceLenght + j];
     }
     medians[i] = MedianOf5(slice);
   }
-  if (last_slice_len != 0) {
-    std::vector<int> last_slice(last_slice_len);
-    for (int i = 0; i < last_slice_len; ++i) {
-      last_slice[i] = array[end - last_slice_len + i];
+  if (last_slice_lenght != 0) {
+    std::vector<int> last_slice(last_slice_lenght);
+    for (size_t i = 0; i < last_slice_lenght; ++i) {
+      last_slice[i] = array[end - last_slice_lenght + i];
     }
-    medians[medians_len - 1] = MedianOf1234(last_slice);
+    medians[medians_lenght - 1] = MedianShortArray(last_slice);
   }
 
   int pivot;
-  if (medians_len < 5) {
-    pivot = MedianOf1234(medians);
-  } else if (medians_len == 5) {
+  if (medians_lenght < 5) {
+    pivot = MedianShortArray(medians);
+  } else if (medians_lenght == 5) {
     pivot = MedianOf5(medians);
   } else {
-    pivot = QuickSelect(medians, 0, medians_len, (medians_len + 1) / 2, slice);
+    pivot = QuickSelect(medians, 0, medians_lenght, (medians_lenght + 1) / 2,
+                        slice);
   }
-  int less_pivot_num = Partition(array, start, end, pivot);
+  size_t less_pivot_num = Partition(array, start, end, pivot);
   if (order_statistic_num <= less_pivot_num) {
     return QuickSelect(array, start, start + less_pivot_num,
                        order_statistic_num, slice);
   }
-  int less_and_equal_pivot_num =
+  size_t less_and_equal_pivot_num =
       Partition(array, start + less_pivot_num, end, pivot + 1) + less_pivot_num;
   if (order_statistic_num <= less_and_equal_pivot_num) {
     return pivot;
@@ -120,20 +125,20 @@ int QuickSelect(std::vector<int>& array, int start, int end,
 }
 
 int main() {
-  int sequence_len;
-  int order_statistic_num;
+  size_t sequence_len;
+  size_t order_statistic_num;
   std::cin >> sequence_len >> order_statistic_num;
   std::vector<int> sequence(sequence_len);
   std::cin >> sequence[0] >> sequence[1];
-  const int kMod = 10'000'000 + 4321;
-  const long long kFactor1 = 123;
-  const long long kFactor2 = 45;
-  for (int i = 2; i < sequence_len; ++i) {
+  const size_t kMod = 10'000'000 + 4321;
+  const size_t kFactor1 = 123;
+  const size_t kFactor2 = 45;
+  for (size_t i = 2; i < sequence_len; ++i) {
     sequence[i] =
         (kFactor1 * sequence[i - 1] + kFactor2 * sequence[i - 2]) % kMod;
   }
 
-  const int kSliceLen = 5;
+  const size_t kSliceLen = 5;
   std::vector<int> slice(kSliceLen);
   std::cout << QuickSelect(sequence, 0, sequence_len, order_statistic_num,
                            slice);
