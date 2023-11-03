@@ -12,21 +12,21 @@
 
 void CreatePrefix(std::vector<double>& volumes,
                   std::vector<double>& prefix_geometric_avg) {
-  size_t len = prefix_geometric_avg.size();
+  size_t lenght = prefix_geometric_avg.size();
   double current_geometric_avg = 1;
-  for (size_t i = 0; i < len; ++i) {
-    current_geometric_avg *= pow(volumes[i], 1.0 / len);
+  for (size_t i = 0; i < lenght; ++i) {
+    current_geometric_avg *= pow(volumes[i], 1.0 / lenght);
     prefix_geometric_avg[i] = current_geometric_avg;
   }
 }
 
 void CreateSuffix(std::vector<double>& volumes,
                   std::vector<double>& suffix_geometric_avg) {
-  size_t len = suffix_geometric_avg.size();
+  size_t lenght = suffix_geometric_avg.size();
   double current_geometric_avg = 1;
-  for (int i = len - 1; i >= 0; --i) {
-    current_geometric_avg *= pow(volumes[i], 1.0 / len);
-    suffix_geometric_avg[i] = current_geometric_avg;
+  for (size_t i = lenght; i > 0; --i) {
+    current_geometric_avg *= pow(volumes[i - 1], 1.0 / lenght);
+    suffix_geometric_avg[i - 1] = current_geometric_avg;
   }
 }
 
@@ -45,25 +45,25 @@ double GetGeometricAvgOnSubarray(std::vector<double>& prefix_geometric_avg,
 }
 
 int main() {
-  int len;
-  std::cin >> len;
-  std::vector<double> volumes(len);
-  for (int i = 0; i < len; ++i) {
+  size_t lenght;
+  std::cin >> lenght;
+  std::vector<double> volumes(lenght);
+  for (size_t i = 0; i < lenght; ++i) {
     std::cin >> volumes[i];
   }
 
-  std::vector<double> prefix_geometric_avg(len);
-  std::vector<double> suffix_geometric_avg(len);
+  std::vector<double> prefix_geometric_avg(lenght);
+  std::vector<double> suffix_geometric_avg(lenght);
   CreatePrefix(volumes, prefix_geometric_avg);
   CreateSuffix(volumes, suffix_geometric_avg);
 
-  int requests_num;
+  size_t requests_num;
   std::cin >> requests_num;
-  int left;
-  int right;
-  for (int i = 0; i < requests_num; ++i) {
+  size_t left;
+  size_t right;
+  for (size_t i = 0; i < requests_num; ++i) {
     std::cin >> left >> right;
-    const int kSetprecision = 10;
+    const size_t kSetprecision = 10;
     std::cout << std::fixed << std::setprecision(kSetprecision)
               << GetGeometricAvgOnSubarray(prefix_geometric_avg,
                                            suffix_geometric_avg, left, right)
