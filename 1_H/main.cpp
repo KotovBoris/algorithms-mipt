@@ -5,7 +5,7 @@
 #include <iostream>
 #include <vector>
 
-int MedianOf1234(std::vector<int>& array) {
+int MedianShortArray(std::vector<int>& array) {  // длина массива - от 1 до 4
   if (array.size() <= 2) {
     return array[0];
   }
@@ -40,74 +40,79 @@ int MedianOf5(std::vector<int>& slice) {
   return std::max(slice[2], slice[3]);
 }
 
-int Partition(std::vector<int>& array, int start, int end, int pivot) {
-  int index_for_less_than_pivot = start;
-  int index_for_more_than_pivot = end - 1;
-  while (index_for_less_than_pivot < end &&
-         array[index_for_less_than_pivot] < pivot) {
-    ++index_for_less_than_pivot;
-  }
-  while (index_for_more_than_pivot >= start &&
-         array[index_for_more_than_pivot] >= pivot) {
-    --index_for_more_than_pivot;
-  }
-  while (index_for_less_than_pivot < index_for_more_than_pivot) {
-    std::swap(array[index_for_less_than_pivot],
-              array[index_for_more_than_pivot]);
-    while (index_for_less_than_pivot < end &&
-           array[index_for_less_than_pivot] < pivot) {
-      ++index_for_less_than_pivot;
+size_t Partition(std::vector<int>& array, size_t start, size_t end, int pivot) {
+  size_t less_pivot = start;
+  size_t more_pivot = end - 1;
+  while (less_pivot < end && array[less_pivot] < pivot) {
+    if (less_pivot == 0) {
+      break;
     }
-    while (index_for_more_than_pivot >= start &&
-           array[index_for_more_than_pivot] >= pivot) {
-      --index_for_more_than_pivot;
+    ++less_pivot;
+  }
+  while (more_pivot >= start && array[more_pivot] >= pivot) {
+    if (more_pivot == 0) {
+      break;
+    }
+    --more_pivot;
+  }
+  while (less_pivot < more_pivot) {
+    std::swap(array[less_pivot], array[more_pivot]);
+    while (less_pivot < end && array[less_pivot] < pivot) {
+      ++less_pivot;
+    }
+    while (more_pivot >= start && array[more_pivot] >= pivot) {
+      if (more_pivot == 0) {
+        break;
+      }
+      --more_pivot;
     }
   }
-  return index_for_more_than_pivot + 1 - start;
+  return more_pivot + 1 - start;
 }
 
-int QuickSelect(std::vector<int>& array, int start, int end,
-                int order_statistic_num, std::vector<int>& slice) {
-  int len = end - start;
-  if (len == 1) {
+int QuickSelect(std::vector<int>& array, size_t start, size_t end,
+                size_t order_statistic_num, std::vector<int>& slice) {
+  size_t lenght = end - start;
+  if (lenght == 1) {
     return array[start];
   }
 
-  const int kSliceLen = 5;
-  int medians_len = len / kSliceLen;
-  int last_slice_len = len % kSliceLen;
-  if (last_slice_len != 0) {
-    ++medians_len;
+  const size_t kSliceLenght = 5;
+  size_t medians_lenght = lenght / kSliceLenght;
+  size_t last_slice_lenght = lenght % kSliceLenght;
+  if (last_slice_lenght != 0) {
+    ++medians_lenght;
   }
-  std::vector<int> medians(medians_len);
-  for (int i = 0; i < len / kSliceLen; ++i) {
-    for (int j = 0; j < kSliceLen; ++j) {
-      slice[j] = array[start + i * kSliceLen + j];
+  std::vector<int> medians(medians_lenght);
+  for (size_t i = 0; i < lenght / kSliceLenght; ++i) {
+    for (size_t j = 0; j < kSliceLenght; ++j) {
+      slice[j] = array[start + i * kSliceLenght + j];
     }
     medians[i] = MedianOf5(slice);
   }
-  if (last_slice_len != 0) {
-    std::vector<int> last_slice(last_slice_len);
-    for (int i = 0; i < last_slice_len; ++i) {
-      last_slice[i] = array[end - last_slice_len + i];
+  if (last_slice_lenght != 0) {
+    std::vector<int> last_slice(last_slice_lenght);
+    for (size_t i = 0; i < last_slice_lenght; ++i) {
+      last_slice[i] = array[end - last_slice_lenght + i];
     }
-    medians[medians_len - 1] = MedianOf1234(last_slice);
+    medians[medians_lenght - 1] = MedianShortArray(last_slice);
   }
 
   int pivot;
-  if (medians_len < 5) {
-    pivot = MedianOf1234(medians);
-  } else if (medians_len == 5) {
+  if (medians_lenght < 5) {
+    pivot = MedianShortArray(medians);
+  } else if (medians_lenght == 5) {
     pivot = MedianOf5(medians);
   } else {
-    pivot = QuickSelect(medians, 0, medians_len, (medians_len + 1) / 2, slice);
+    pivot = QuickSelect(medians, 0, medians_lenght, (medians_lenght + 1) / 2,
+                        slice);
   }
-  int less_pivot_num = Partition(array, start, end, pivot);
+  size_t less_pivot_num = Partition(array, start, end, pivot);
   if (order_statistic_num <= less_pivot_num) {
     return QuickSelect(array, start, start + less_pivot_num,
                        order_statistic_num, slice);
   }
-  int less_and_equal_pivot_num =
+  size_t less_and_equal_pivot_num =
       Partition(array, start + less_pivot_num, end, pivot + 1) + less_pivot_num;
   if (order_statistic_num <= less_and_equal_pivot_num) {
     return pivot;
@@ -116,32 +121,32 @@ int QuickSelect(std::vector<int>& array, int start, int end,
                      order_statistic_num - less_and_equal_pivot_num, slice);
 }
 
-void QuickSort(std::vector<int>& array, int start, int end) {
-  int len = end - start;
-  if (len <= 1) {
+void QuickSort(std::vector<int>& array, size_t start, size_t end) {
+  size_t lenght = end - start;
+  if (lenght <= 1) {
     return;
   }
-  const int kSliceLen = 5;
-  std::vector<int> slice(kSliceLen);
-  int pivot = QuickSelect(array, start, end, (len + 1) / 2, slice);
-  int less_pivot_num = Partition(array, start, end, pivot);
-  int less_and_equal_pivot_num =
+  const size_t kSliceLenght = 5;
+  std::vector<int> slice(kSliceLenght);
+  int pivot = QuickSelect(array, start, end, (lenght + 1) / 2, slice);
+  size_t less_pivot_num = Partition(array, start, end, pivot);
+  size_t less_and_equal_pivot_num =
       Partition(array, start + less_pivot_num, end, pivot + 1) + less_pivot_num;
   QuickSort(array, start, start + less_pivot_num);
   QuickSort(array, start + less_and_equal_pivot_num, end);
 }
 
 int main() {
-  int array_len;
-  std::cin >> array_len;
-  std::vector<int> array(array_len);
-  for (int i = 0; i < array_len; ++i) {
+  size_t array_lenght;
+  std::cin >> array_lenght;
+  std::vector<int> array(array_lenght);
+  for (size_t i = 0; i < array_lenght; ++i) {
     std::cin >> array[i];
   }
 
-  QuickSort(array, 0, array_len);
+  QuickSort(array, 0, array_lenght);
 
-  for (int elem : array) {
-    std::cout << elem << ' ';
+  for (int element : array) {
+    std::cout << element << ' ';
   }
 }
