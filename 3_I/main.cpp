@@ -1,3 +1,5 @@
+/*Вывести 2-ую порядковую статистику на диапазоне*/
+
 #include <algorithm>
 #include <iostream>
 #include <vector>
