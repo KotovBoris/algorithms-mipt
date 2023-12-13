@@ -6,41 +6,76 @@
 
 #include <deque>
 #include <iostream>
+#include <queue>
 #include <vector>
 
-void Balance(std::deque<size_t>& first_half, std::deque<size_t>& second_half) {
-  if (first_half.size() < second_half.size()) {
-    first_half.push_back(second_half.front());
-    second_half.pop_front();
-    return;
+class GoblinQueue {
+ public:
+  GoblinQueue() {}
+
+  size_t PopFront();
+
+  void PushBack(size_t element);
+
+  void PushMid(size_t element);
+
+ private:
+  std::queue<size_t> first_half_;
+  std::deque<size_t> second_half_;
+
+  void BalanceHalfs() {
+    if (first_half_.size() < second_half_.size()) {
+      first_half_.push(second_half_.front());
+      second_half_.pop_front();
+      return;
+    }
+    if (first_half_.size() > second_half_.size() + 1) {
+      second_half_.push_front(first_half_.back());
+      first_half_.pop();
+    }
   }
-  if (first_half.size() > second_half.size() + 1) {
-    second_half.push_front(first_half.back());
-    first_half.pop_back();
-  }
+};
+
+size_t GoblinQueue::PopFront() {
+  size_t front = first_half_.front();
+  first_half_.pop();
+  BalanceHalfs();
+  return front;
+}
+
+void GoblinQueue::PushBack(size_t element) {
+  second_half_.push_back(element);
+  BalanceHalfs();
+}
+
+void GoblinQueue::PushMid(size_t element) {
+  second_half_.push_front(element);
+  BalanceHalfs();
 }
 
 int main() {
   size_t number;
   std::cin >> number;
 
-  std::deque<size_t> first_half;
-  std::deque<size_t> second_half;
+  GoblinQueue goblins_queue;
+
   for (size_t i = 0; i < number; ++i) {
     char type;
     std::cin >> type;
+
     if (type == '-') {
-      std::cout << first_half.front() << '\n';
-      first_half.pop_front();
-    } else {
-      size_t id;
-      std::cin >> id;
-      if (type == '+') {
-        second_half.push_back(id);
-      } else {
-        first_half.push_back(id);
-      }
+      std::cout << goblins_queue.PopFront() << '\n';
+      continue;
     }
-    Balance(first_half, second_half);
+
+    size_t id;
+    std::cin >> id;
+
+    if (type == '+') {
+      goblins_queue.PushBack(id);
+      continue;
+    }
+
+    goblins_queue.PushMid(id);
   }
 }
