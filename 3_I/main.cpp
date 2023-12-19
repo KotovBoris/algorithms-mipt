@@ -7,9 +7,9 @@
 
 class SparseTable {
  public:
-  SparseTable(const std::vector<int>& data);
+  explicit SparseTable(const std::vector<int>& data);
 
-  int SecondStatistic(size_t left, size_t right);
+  int SecondStatistic(size_t left, size_t right) const;
 
  private:
   struct Statistics {
@@ -24,7 +24,7 @@ class SparseTable {
   void CalculateDegree2();
 
   Statistics MergeStatistics(size_t degree, size_t first_index,
-                             size_t second_index);
+                             size_t second_index) const;
 
   void CalculateStatistics();
 };
@@ -36,7 +36,7 @@ SparseTable::SparseTable(const std::vector<int>& data)
   CalculateStatistics();
 }
 
-int SparseTable::SecondStatistic(size_t left, size_t right) {
+int SparseTable::SecondStatistic(size_t left, size_t right) const {
   size_t degree = degree2_[right - left + 1];
   size_t segment_length = (1 << degree);
   size_t second_start = right - segment_length + 1;
@@ -55,9 +55,8 @@ void SparseTable::CalculateDegree2() {
   }
 }
 
-SparseTable::Statistics SparseTable::MergeStatistics(size_t degree,
-                                                     size_t first_index,
-                                                     size_t second_index) {
+SparseTable::Statistics SparseTable::MergeStatistics(
+    size_t degree, size_t first_index, size_t second_index) const {
   Statistics first = segment_statistics_[degree][first_index];
   Statistics second = segment_statistics_[degree][second_index];
 
