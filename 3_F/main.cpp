@@ -25,7 +25,7 @@ class SegmentTree {
 
     void CalculateNode() { value = (left->Merge(*right)).value; }
 
-    void UpdateParents();
+    void UpdateParents() const;
   };
 
   std::vector<size_t> data_;
@@ -130,7 +130,7 @@ SegmentTree::Node SegmentTree::Node::Merge(const Node& second) const {
   return copy;
 }
 
-void SegmentTree::Node::UpdateParents() {
+void SegmentTree::Node::UpdateParents() const {
   if (parent == nullptr) {
     return;
   }
