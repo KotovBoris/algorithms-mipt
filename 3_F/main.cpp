@@ -8,24 +8,24 @@
 
 class SegmentTree {
  public:
-  SegmentTree(const std::vector<size_t>& data);
+  explicit SegmentTree(const std::vector<size_t>& data);
 
-  long long GetValue(size_t start, size_t end, size_t min, size_t max);
+  long long GetValue(size_t start, size_t end, size_t min, size_t max) const;
 
  private:
   struct Node {
     size_t start;
     size_t end;
     std::vector<size_t> value;
-    Node* parent;
-    Node* left;
-    Node* right;
+    Node* parent = nullptr;
+    Node* left = nullptr;
+    Node* right = nullptr;
 
     Node Merge(const Node& second) const;
 
     void CalculateNode() { value = (left->Merge(*right)).value; }
 
-    void UpdateParents() const;
+    void UpdateParents();
   };
 
   std::vector<size_t> data_;
@@ -37,26 +37,26 @@ class SegmentTree {
   void CreateSubtree(Node& node);
 
   long long MergeFundamental(size_t min, size_t max, size_t start, size_t end,
-                             Node& node);
+                             const Node& node) const;
 };
 
 SegmentTree::SegmentTree(const std::vector<size_t>& data)
     : data_(data), leaves_(data.size()) {
   nodes_.reserve(4 * data.size());
 
-  nodes_.push_back(Node{0, data_.size() - 1, {}, nullptr, nullptr, nullptr});
+  nodes_.push_back(Node{0ull, data_.size() - 1});
   CreateSubtree(nodes_[0]);
 }
 
 long long SegmentTree::GetValue(size_t start, size_t end, size_t min,
-                                size_t max) {
+                                size_t max) const {
   return MergeFundamental(min, max, start, end, nodes_[0]);
 }
 
 size_t SegmentTree::CreateSon(size_t start, size_t end, Node* parent) {
   size_t index = nodes_.size();
   nodes_.push_back(
-      Node{start, end, std::vector<size_t>(), parent, nullptr, nullptr});
+      Node{start, end, std::vector<size_t>(), parent});
   CreateSubtree(nodes_[index]);
   return index;
 }
@@ -80,7 +80,7 @@ void SegmentTree::CreateSubtree(Node& node) {
 }
 
 long long SegmentTree::MergeFundamental(size_t min, size_t max, size_t start,
-                                        size_t end, Node& node) {
+                                        size_t end, const Node& node) const {
   if (start == node.start && end == node.end) {
     const std::vector<size_t>& array = node.value;
     return std::upper_bound(array.begin(), array.end(), max) -
@@ -105,10 +105,7 @@ long long SegmentTree::MergeFundamental(size_t min, size_t max, size_t start,
 SegmentTree::Node SegmentTree::Node::Merge(const Node& second) const {
   Node copy{start,
             second.end,
-            std::vector<size_t>(value.size() + second.value.size()),
-            nullptr,
-            nullptr,
-            nullptr};
+            std::vector<size_t>(value.size() + second.value.size())};
   size_t first_index = 0;
   size_t second_index = 0;
   while (first_index + second_index < copy.value.size()) {
@@ -133,7 +130,7 @@ SegmentTree::Node SegmentTree::Node::Merge(const Node& second) const {
   return copy;
 }
 
-void SegmentTree::Node::UpdateParents() const {
+void SegmentTree::Node::UpdateParents() {
   if (parent == nullptr) {
     return;
   }
