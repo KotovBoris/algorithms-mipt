@@ -1,5 +1,5 @@
-// Найти компоненты сильной связности графа и
-// топологически отсортировать его конденсацию.
+//  Найти компоненты сильной связности графа и
+//  топологически отсортировать его конденсацию.
 
 #include <algorithm>
 #include <iostream>
@@ -7,95 +7,112 @@
 
 class Graph {
  public:
-  Graph(const std::vector<std::vector<size_t>>& adjacency_list)
-      : adjacency_list_(adjacency_list), visited_(adjacency_list.size()) {}
+  explicit Graph(size_t size = 0) : adjacency_list_(size) {}
 
-  Graph Reversed() {
-    std::vector<std::vector<size_t>> reversed_list(adjacency_list_.size());
-    for (size_t i = 0; i < adjacency_list_.size(); ++i) {
-      for (size_t j = 0; j < adjacency_list_[i].size(); ++j) {
-        reversed_list[adjacency_list_[i][j]].push_back(i);
+  explicit Graph(const std::vector<std::vector<size_t>>& adjacency_list)
+      : adjacency_list_(adjacency_list) {}
+
+  void AddEdge(size_t start_vertex, size_t end_vertex) {
+    adjacency_list_[start_vertex].push_back(end_vertex);
+  }
+
+  const std::vector<size_t>& GetAdjacent(size_t node) const {
+    return adjacency_list_[node];
+  }
+
+  size_t Size() const { return adjacency_list_.size(); }
+
+  Graph Reversed() const {
+    std::vector<std::vector<size_t>> reversed_list(Size());
+    for (size_t i = 0; i < Size(); ++i) {
+      for (auto node : adjacency_list_[i]) {
+        reversed_list[node].push_back(i);
       }
     }
 
     return Graph(reversed_list);
   }
 
-  std::vector<size_t> FindSCCs() {
-    return Reversed().ConnectivityComponents(PseudoTopSort());
-  }
-
  private:
   std::vector<std::vector<size_t>> adjacency_list_;
-  std::vector<bool> visited_;
-
-  void SortComponent(size_t current, std::vector<size_t>& sorted) {
-    if (visited_[current]) {
-      return;
-    }
-
-    visited_[current] = true;
-
-    for (size_t i = 0; i < adjacency_list_[current].size(); ++i) {
-      SortComponent(adjacency_list_[current][i], sorted);
-    }
-
-    sorted.push_back(current);
-  }
-
-  std::vector<size_t> PseudoTopSort() {
-    std::vector<size_t> sorted;
-
-    for (size_t i = 0; i < adjacency_list_.size(); ++i) {
-      SortComponent(i, sorted);
-    }
-
-    std::reverse(sorted.begin(), sorted.end());
-
-    std::fill(visited_.begin(), visited_.end(), false);
-
-    return sorted;
-  }
-
-  std::vector<size_t> ConnectivityComponents(const std::vector<size_t>& order) {
-    std::vector<size_t> distribution(adjacency_list_.size());
-
-    size_t component_number = 0;
-    for (size_t i = 0; i < distribution.size(); ++i) {
-      std::vector<size_t> current_component;
-      SortComponent(order[i], current_component);
-
-      if (!current_component.empty()) {
-        ++component_number;
-
-        for (size_t element : current_component) {
-          distribution[element] = component_number;
-        }
-      }
-    }
-
-    return distribution;
-  }
 };
 
-int main() {
+std::istream& operator>>(std::istream& input_stream, Graph& graph) {
   size_t vertices;
   size_t edges;
-  std::cin >> vertices >> edges;
+  input_stream >> vertices >> edges;
 
-  std::vector<std::vector<size_t>> adjacency_list(vertices);
-
+  Graph temp_graph(vertices);
   for (size_t i = 0; i < edges; ++i) {
-    size_t start;
-    size_t end;
-    std::cin >> start >> end;
+    size_t start_vertex;
+    size_t end_vertex;
+    input_stream >> start_vertex >> end_vertex;
 
-    adjacency_list[start - 1].push_back(end - 1);
+    temp_graph.AddEdge(start_vertex - 1, end_vertex - 1);
   }
 
-  Graph graph(adjacency_list);
+  graph = temp_graph;
+  return input_stream;
+}
 
-  std::vector<size_t> components = graph.FindSCCs();
+void DFS(const Graph& graph, size_t node, std::vector<bool>& visited,
+         std::vector<size_t>& order) {
+  if (visited[node]) {
+    return;
+  }
+
+  visited[node] = true;
+  for (auto adjacent : graph.GetAdjacent(node)) {
+    DFS(graph, adjacent, visited, order);
+  }
+
+  order.push_back(node);
+}
+
+std::vector<size_t> PseudoTopSort(const Graph& graph) {
+  std::vector<size_t> order;
+  std::vector<bool> visited(graph.Size(), false);
+
+  for (size_t i = 0; i < graph.Size(); ++i) {
+    if (!visited[i]) {
+      DFS(graph, i, visited, order);
+    }
+  }
+
+  std::reverse(order.begin(), order.end());
+  return order;
+}
+
+std::vector<size_t> FindSCC(const Graph& graph) {
+  std::vector<size_t> order = PseudoTopSort(graph);
+  Graph reversed_graph = graph.Reversed();
+
+  std::vector<size_t> components(graph.Size(), 0);
+  std::vector<bool> visited(graph.Size(), false);
+  size_t component_id = 0;
+
+  for (auto vertex : order) {
+    if (visited[vertex]) {
+      continue;
+    }
+
+    std::vector<size_t> component;
+    DFS(reversed_graph, vertex, visited, component);
+
+    ++component_id;
+    for (auto node : component) {
+      components[node] = component_id;
+    }
+  }
+
+  return components;
+}
+
+int main() {
+  Graph graph;
+  std::cin >> graph;
+
+  std::vector<size_t> components = FindSCC(graph);
   std::cout << *std::max_element(components.begin(), components.end()) << '\n';
 
   for (auto element : components) {
