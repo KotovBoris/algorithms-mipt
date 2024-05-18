@@ -2,8 +2,11 @@
 
 #include <algorithm>
 #include <iostream>
+#include <limits>
 #include <queue>
 #include <vector>
+
+constexpr size_t cInfinity = 2009000999;  //  выводим если вершина недостижима
 
 struct EdgeEnd {
   size_t end = 0;
@@ -13,6 +16,10 @@ struct EdgeEnd {
 class Graph {
  public:
   explicit Graph(size_t size = 0) : adjacency_list_(size) {}
+
+  void Reserve(size_t new_size) {
+    adjacency_list_ = std::vector<std::vector<EdgeEnd>>(new_size);
+  }
 
   void AddEdge(size_t start_vertex, size_t end_vertex, int weight) {
     adjacency_list_[start_vertex].push_back({end_vertex, weight});
@@ -34,39 +41,38 @@ std::istream& operator>>(std::istream& input_stream, Graph& graph) {
   size_t edges;
   input_stream >> vertices >> edges;
 
-  Graph temp_graph(vertices);
+  graph.Reserve(vertices);
+
   for (size_t i = 0; i < edges; ++i) {
     size_t start_vertex;
     size_t end_vertex;
     int weight;
     input_stream >> start_vertex >> end_vertex >> weight;
 
-    temp_graph.AddEdge(start_vertex, end_vertex, weight);
+    graph.AddEdge(start_vertex, end_vertex, weight);
   }
 
-  graph = temp_graph;
   return input_stream;
 }
 
-struct HeapNode {
+struct DistanceUpperBound {
   size_t distance;
   size_t node;
 
-  bool operator<(const HeapNode& other) const {
+  bool operator<(const DistanceUpperBound& other) const {
     return distance > other.distance;
   }
 };
 
 std::vector<size_t> ShortestDistances(
     size_t start, const Graph& graph) {  //  Dijkstra's algorithm
-  const size_t cInfinity = 2009000999;
   std::vector<size_t> distances(graph.Size(), cInfinity);
 
-  std::priority_queue<HeapNode> heap;
-  heap.push(HeapNode{0, start});
+  std::priority_queue<DistanceUpperBound> heap;
+  heap.push(DistanceUpperBound{0, start});
 
   while (!heap.empty()) {
-    HeapNode top = heap.top();
+    DistanceUpperBound top = heap.top();
     heap.pop();
 
     if (distances[top.node] != cInfinity) {
@@ -76,7 +82,8 @@ std::vector<size_t> ShortestDistances(
     distances[top.node] = top.distance;
 
     for (const EdgeEnd& neighbor : graph.GetAdjacent(top.node)) {
-      heap.push(HeapNode{top.distance + neighbor.weight, neighbor.end});
+      heap.push(
+          DistanceUpperBound{top.distance + neighbor.weight, neighbor.end});
     }
   }
 
