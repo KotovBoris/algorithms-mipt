@@ -5,6 +5,12 @@
 #include <limits>
 #include <vector>
 
+//  в матрице смежности это значение => между вершинами нет ребра
+constexpr int cNoEdge = 100000;
+
+//  делим пополам, чтобы избежать переполнения при сложении
+constexpr int cInfinity = std::numeric_limits<int>::max() / 2;
+
 void GetPath(std::vector<size_t>& path, size_t first, size_t second,
              const std::vector<std::vector<int>>& node_between) {
   if (node_between[first][second] == -1) {
@@ -17,7 +23,7 @@ void GetPath(std::vector<size_t>& path, size_t first, size_t second,
   GetPath(path, between, second, node_between);
 }
 
-std::vector<size_t> NegativeCycle(std::vector<std::vector<int>> distances) {
+std::vector<size_t> FindNegativeCycle(std::vector<std::vector<int>> distances) {
   size_t size = distances.size();
   std::vector<std::vector<int>> node_between(size, std::vector<int>(size, -1));
 
@@ -61,9 +67,7 @@ int main() {
     for (size_t j = 0; j < number; ++j) {
       std::cin >> adjacency_matrix[i][j];
 
-      constexpr int cInfinity = std::numeric_limits<int>::max() / 2;
-      const int cBadInfinity = 100000;
-      if (adjacency_matrix[i][j] == cBadInfinity) {
+      if (adjacency_matrix[i][j] == cNoEdge) {
         adjacency_matrix[i][j] = cInfinity;
       }
 
@@ -78,7 +82,7 @@ int main() {
     return 0;
   }
 
-  std::vector<size_t> cycle = NegativeCycle(adjacency_matrix);
+  std::vector<size_t> cycle = FindNegativeCycle(adjacency_matrix);
 
   if (cycle.empty()) {
     std::cout << "NO";
