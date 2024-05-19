@@ -33,8 +33,6 @@ class State {
  private:
   std::bitset<cBitsetSize> state_;
   int ManhattanDistance() const;
-  int CellConflicts(int first, int second, int val,
-                    std::bitset<cBoardSize>& conflicts) const;
   int LinearConflicts() const;
 };
 
@@ -162,26 +160,6 @@ int State::ManhattanDistance() const {
   return distance;
 }
 
-//  линейный конфликт для конкретной клетки
-int State::CellConflicts(int first, int second, int val,
-                         std::bitset<cBoardSize>& conflicts) const {
-  for (int i = second + 1; i < cBoardSize; ++i) {
-    int other_val = GetValue(i * cBoardSize + first);
-    if (other_val == 0) {
-      continue;
-    }
-
-    int other_target_pos = other_val - 1;
-    int other_target_first = other_target_pos % cBoardSize;
-    if (other_target_first == first && other_val < val) {
-      conflicts[first] = true;
-      return 1;
-    }
-  }
-
-  return 0;
-}
-
 int State::LinearConflicts() const {
   int conflicts = 0;
   std::bitset<cBoardSize> row_conflicts;
@@ -200,11 +178,35 @@ int State::LinearConflicts() const {
     int y = pos % cBoardSize;
 
     if (x == target_x && !row_conflicts[x]) {
-      CellConflicts(x, y, val, row_conflicts);
+      for (int j = y + 1; j < cBoardSize; ++j) {
+        int other_val = GetValue(x * cBoardSize + j);
+        if (other_val == 0) {
+          continue;
+        }
+        int other_target_pos = other_val - 1;
+        int other_target_x = other_target_pos / cBoardSize;
+        if (other_target_x == x && other_val < val) {
+          conflicts += 1;
+          row_conflicts[x] = true;
+          break;
+        }
+      }
     }
 
     if (y == target_y && !col_conflicts[y]) {
-      CellConflicts(y, x, val, col_conflicts);
+      for (int i = x + 1; i < cBoardSize; ++i) {
+        int other_val = GetValue(i * cBoardSize + y);
+        if (other_val == 0) {
+          continue;
+        }
+        int other_target_pos = other_val - 1;
+        int other_target_y = other_target_pos % cBoardSize;
+        if (other_target_y == y && other_val < val) {
+          conflicts += 1;
+          col_conflicts[y] = true;
+          break;
+        }
+      }
     }
   }
   return 2 * conflicts;
