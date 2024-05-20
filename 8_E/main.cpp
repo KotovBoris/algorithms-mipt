@@ -11,16 +11,16 @@ constexpr int cNoEdge = 100000;
 //  делим пополам, чтобы избежать переполнения при сложении
 constexpr int cInfinity = std::numeric_limits<int>::max() / 2;
 
-void GetPath(std::vector<size_t>& path, size_t first, size_t second,
-             const std::vector<std::vector<int>>& node_between) {
-  if (node_between[first][second] == -1) {
-    path.push_back(first);
+void RestoreMinPath(std::vector<size_t>& path, size_t from, size_t to,
+                    const std::vector<std::vector<int>>& node_between) {
+  if (node_between[from][to] == -1 || from == to) {
+    path.push_back(from);
     return;
   }
 
-  size_t between = node_between[first][second];
-  GetPath(path, first, between, node_between);
-  GetPath(path, between, second, node_between);
+  size_t between = node_between[from][to];
+  RestoreMinPath(path, from, between, node_between);
+  RestoreMinPath(path, between, to, node_between);
 }
 
 std::vector<size_t> FindNegativeCycle(std::vector<std::vector<int>> distances) {
@@ -40,9 +40,14 @@ std::vector<size_t> FindNegativeCycle(std::vector<std::vector<int>> distances) {
         }
 
         if (distances[start][end] + distances[end][start] < 0) {
+          if (start == end) {
+            return {start, end};
+          }
+
           std::vector<size_t> cycle;
-          GetPath(cycle, start, end, node_between);
-          GetPath(cycle, end, start, node_between);
+          RestoreMinPath(cycle, start, end, node_between);
+          RestoreMinPath(cycle, end, start, node_between);
+
           cycle.push_back(start);
 
           return cycle;
@@ -61,8 +66,6 @@ int main() {
   std::vector<std::vector<int>> adjacency_matrix(number,
                                                  std::vector<int>(number));
 
-  int loop = -1;
-
   for (size_t i = 0; i < number; ++i) {
     for (size_t j = 0; j < number; ++j) {
       std::cin >> adjacency_matrix[i][j];
@@ -70,16 +73,7 @@ int main() {
       if (adjacency_matrix[i][j] == cNoEdge) {
         adjacency_matrix[i][j] = cInfinity;
       }
-
-      if (i == j && adjacency_matrix[i][j] < 0) {
-        loop = i;
-      }
     }
-  }
-
-  if (loop != -1) {
-    std::cout << "YES\n2\n" << loop + 1 << ' ' << loop + 1;
-    return 0;
   }
 
   std::vector<size_t> cycle = FindNegativeCycle(adjacency_matrix);
