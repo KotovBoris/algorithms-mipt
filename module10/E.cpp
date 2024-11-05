@@ -16,7 +16,11 @@ struct Node {
 };
 
 class Trie {
+ private:
+  std::vector<Node> nodes_;
+
  public:
+  size_t static Root() { return 0; }
   Trie() { nodes_.push_back(Node()); }
 
   void AddWord(const std::string& word) {
@@ -36,8 +40,6 @@ class Trie {
       }
     }
   }
-
-  size_t static Root() { return 0; }
 
   std::vector<size_t> CountGroup(size_t group_size, size_t max_depth) {
     std::vector<size_t> groups(max_depth * 2 + 1, 0);
@@ -67,8 +69,6 @@ class Trie {
   }
 
  private:
-  std::vector<Node> nodes_;
-
   void AddNode(size_t parent, char letter) {
     nodes_.push_back(Node(nodes_[parent].depth + 1));
     size_t new_node = nodes_.size() - 1;
