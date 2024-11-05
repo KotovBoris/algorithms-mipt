@@ -6,6 +6,9 @@
 
 const size_t cAlphabetSize = 26;
 
+const char cFirstLetter = 'a';
+const char cLastLetter = 'z';
+
 struct Node {
   size_t parent;
   char letter;
@@ -13,6 +16,7 @@ struct Node {
   std::vector<int> children;
   std::vector<size_t> go;
   size_t link;
+  size_t term_link;
   bool terminal;
 
   Node(size_t parent = 0, char letter = ' ', size_t depth = 0)
@@ -22,11 +26,17 @@ struct Node {
         children(cAlphabetSize, -1),
         go(cAlphabetSize, 0),
         link(0),
+        term_link(0),
         terminal(false) {}
 };
 
 class Trie {
+ private:
+  std::vector<Node> nodes_;
+
  public:
+  size_t static Root() { return 0; }
+
   Trie() { nodes_.push_back(Node()); }
 
   size_t AddWord(const std::string& word) { return AddSuffix(Root(), word, 0); }
@@ -34,14 +44,14 @@ class Trie {
   void AhoCorasickPreparation() {
     std::queue<size_t> bfs_queue;
 
-    for (char letter = 'a'; letter <= 'z'; ++letter) {
-      int child = nodes_[Root()].children[letter - 'a'];
+    for (char letter = cFirstLetter; letter <= cLastLetter; ++letter) {
+      int child = nodes_[Root()].children[letter - cFirstLetter];
       if (child == -1) {
         continue;
       }
 
       bfs_queue.push(child);
-      nodes_[Root()].go[letter - 'a'] = child;
+      nodes_[Root()].go[letter - cFirstLetter] = child;
     }
 
     while (!bfs_queue.empty()) {
@@ -50,59 +60,45 @@ class Trie {
       Node& current = nodes_[index];
       Node& parent = nodes_[current.parent];
 
-      current.link = current.parent == 0
-                         ? 0
-                         : nodes_[parent.link].go[current.letter - 'a'];
+      current.link =
+          current.parent == 0
+              ? 0
+              : nodes_[parent.link].go[current.letter - cFirstLetter];
 
-      for (char letter = 'a'; letter <= 'z'; ++letter) {
-        if (current.children[letter - 'a'] == -1) {
-          current.go[letter - 'a'] = nodes_[current.link].go[letter - 'a'];
+      for (char letter = cFirstLetter; letter <= cLastLetter; ++letter) {
+        if (current.children[letter - cFirstLetter] == -1) {
+          current.go[letter - cFirstLetter] =
+              nodes_[current.link].go[letter - cFirstLetter];
           continue;
         }
 
-        current.go[letter - 'a'] = current.children[letter - 'a'];
-        bfs_queue.push(current.children[letter - 'a']);
+        current.go[letter - cFirstLetter] =
+            current.children[letter - cFirstLetter];
+        bfs_queue.push(current.children[letter - cFirstLetter]);
       }
-    }
 
-    bfs_queue.push(Root());
-
-    while (!bfs_queue.empty()) {
-      size_t index = bfs_queue.front();
-      bfs_queue.pop();
-      Node& current = nodes_[index];
-
+      current.term_link = current.link;
       if (!nodes_[current.link].terminal) {
-        current.link = nodes_[current.link].link;
-      }
-
-      for (char letter = 'a'; letter <= 'z'; ++letter) {
-        if (current.children[letter - 'a'] == -1) {
-          continue;
-        }
-
-        bfs_queue.push(current.children[letter - 'a']);
+        current.term_link = nodes_[current.link].term_link;
       }
     }
   }
 
-  size_t static Root() { return 0; }
-
   size_t Go(size_t node, char symbol) const {
-    return nodes_[node].go[symbol - 'a'];
+    return nodes_[node].go[symbol - cFirstLetter];
   }
 
   size_t Link(size_t node) const { return nodes_[node].link; }
 
+  size_t TermLink(size_t node) const { return nodes_[node].term_link; }
+
   size_t Depth(size_t node) const { return nodes_[node].depth; }
 
  private:
-  std::vector<Node> nodes_;
-
   void AddNode(size_t parent, char letter) {
     nodes_.push_back(Node(parent, letter, nodes_[parent].depth + 1));
     size_t new_node = nodes_.size() - 1;
-    nodes_[parent].children[letter - 'a'] = new_node;
+    nodes_[parent].children[letter - cFirstLetter] = new_node;
   }
 
   size_t AddSuffix(size_t start_node, const std::string& word,
@@ -113,7 +109,7 @@ class Trie {
     }
 
     char letter = word[suffix_start];
-    int& child = nodes_[start_node].children[letter - 'a'];
+    int& child = nodes_[start_node].children[letter - cFirstLetter];
     if (child == -1) {
       AddNode(start_node, letter);
     }
@@ -137,8 +133,8 @@ std::vector<std::vector<size_t>> AhoCorasick(
       occurrences[indexes[word]].push_back(i - trie.Depth(word) + 2);
     }
 
-    while (trie.Link(word) != 0) {
-      word = trie.Link(word);
+    while (trie.TermLink(word) != 0) {
+      word = trie.TermLink(word);
       occurrences[indexes[word]].push_back(i - trie.Depth(word) + 2);
     }
   }
