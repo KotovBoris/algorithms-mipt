@@ -1,0 +1,112 @@
+//  Найти кратчайшие расстояния между данной вершиной и остальными
+
+#include <algorithm>
+#include <iostream>
+#include <limits>
+#include <queue>
+#include <vector>
+
+constexpr size_t cInfinity = 2009000999;  //  выводим если вершина недостижима
+
+struct EdgeEnd {
+  size_t end = 0;
+  int weight = 0;
+};
+
+class Graph {
+ public:
+  explicit Graph(size_t size = 0) : adjacency_list_(size) {}
+
+  void Reserve(size_t new_size) {
+    adjacency_list_ = std::vector<std::vector<EdgeEnd>>(new_size);
+  }
+
+  void AddEdge(size_t start_vertex, size_t end_vertex, int weight) {
+    adjacency_list_[start_vertex].push_back({end_vertex, weight});
+    adjacency_list_[end_vertex].push_back({start_vertex, weight});
+  }
+
+  const std::vector<EdgeEnd>& GetAdjacent(size_t node) const {
+    return adjacency_list_[node];
+  }
+
+  size_t Size() const { return adjacency_list_.size(); }
+
+ private:
+  std::vector<std::vector<EdgeEnd>> adjacency_list_;
+};
+
+std::istream& operator>>(std::istream& input_stream, Graph& graph) {
+  size_t vertices;
+  size_t edges;
+  input_stream >> vertices >> edges;
+
+  graph.Reserve(vertices);
+
+  for (size_t i = 0; i < edges; ++i) {
+    size_t start_vertex;
+    size_t end_vertex;
+    int weight;
+    input_stream >> start_vertex >> end_vertex >> weight;
+
+    graph.AddEdge(start_vertex, end_vertex, weight);
+  }
+
+  return input_stream;
+}
+
+struct DistanceUpperBound {
+  size_t distance;
+  size_t node;
+
+  bool operator<(const DistanceUpperBound& other) const {
+    return distance > other.distance;
+  }
+};
+
+std::vector<size_t> ShortestDistances(
+    size_t start, const Graph& graph) {  //  Dijkstra's algorithm
+  std::vector<size_t> distances(graph.Size(), cInfinity);
+
+  std::priority_queue<DistanceUpperBound> heap;
+  heap.push(DistanceUpperBound{0, start});
+
+  while (!heap.empty()) {
+    DistanceUpperBound top = heap.top();
+    heap.pop();
+
+    if (distances[top.node] != cInfinity) {
+      continue;
+    }
+
+    distances[top.node] = top.distance;
+
+    for (const EdgeEnd& neighbor : graph.GetAdjacent(top.node)) {
+      heap.push(
+          DistanceUpperBound{top.distance + neighbor.weight, neighbor.end});
+    }
+  }
+
+  return distances;
+}
+
+int main() {
+  size_t graph_number;
+  std::cin >> graph_number;
+
+  for (size_t i = 0; i < graph_number; ++i) {
+    Graph graph;
+    std::cin >> graph;
+
+    size_t start;
+    std::cin >> start;
+
+    std::vector<size_t> distances = ShortestDistances(start, graph);
+
+    for (auto element : distances) {
+      std::cout << element << ' ';
+    }
+
+    std::cout << '\n';
+  }
+}
